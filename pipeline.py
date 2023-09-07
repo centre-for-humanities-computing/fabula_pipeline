@@ -2,14 +2,14 @@
 # A CLI that takes an input direcotry and an output directory
 import argparse
 import bz2
+from collections import Counter
 import gzip
 import json
+from math import log
 import re
 from pathlib import Path
 
-from collections import Counter
 from lexical_diversity import lex_div as ld
-from math import log
 import neurokit2 as nk
 import nltk
 from nltk.tokenize import word_tokenize
@@ -30,7 +30,8 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def extract_text(filename):
+def extract_text(filename: str) -> str:
+    # read the text from given filename
     with open(filename, "r") as f:
         text = f.read()
         return text
@@ -41,15 +42,16 @@ def wordcount_wordlen_msttr(text: str):
     words = word_tokenize(text)
     # Wordcount
     count = len(words)
-    # Avg. wordlenght
+    # Avg. wordlength
     len_all_words = [len(word) for word in words]
     avg_word_length = sum(len_all_words) / count
-    # MSTTR
-    msttr = ld.msttr(words, window_length=100)  # Then calculate MSTTR-100
+    # MSTTR-100
+    msttr = ld.msttr(words, window_length=100)
     return count, avg_word_length, msttr
 
 
-def avgsentlen_compressrat(sents: str):
+def avgsentlen_compressrat(sents: list[str]):
+    # average sentence length – sum of sentence lengths divided by no. of sentences
     avg_sentlen = sum([len(sent) for sent in sents]) / len(sents)
 
     # taking only 1500 sentences (skipping the first that are often title etc)
@@ -68,8 +70,8 @@ def avgsentlen_compressrat(sents: str):
     return avg_sentlen, gzipr, bzipr
 
 
-def get_sentarc(sents: list):
-    # this is mainly form figs.py
+def get_sentarc(sents: list[str]) -> list[float]:
+    # this is mainly from figs.py
     sid = SentimentIntensityAnalyzer()
 
     arc = []
@@ -80,16 +82,16 @@ def get_sentarc(sents: list):
     return arc
 
 
-def integrate(x):
+def integrate(x: list[float]) -> np.matrix:
     return np.mat(np.cumsum(x) - np.mean(x))
 
 
-def divide_segments(arc: list, n: int):
+def divide_segments(arc: list[float], n: int):
     for i in range(0, len(arc), n):
         yield arc[i : i + n]
 
 
-def get_basic_sentarc_features(arc: list):
+def get_basic_sentarc_features(arc: list[float]):
     # basic features
     mean_sent = np.mean(arc)
     std_sent = np.std(arc)
@@ -120,8 +122,8 @@ def get_basic_sentarc_features(arc: list):
     )
 
 
-def get_hurst(story_arc):
-    y = integrate(story_arc)
+def get_hurst(arc: list[float]):
+    y = integrate(arc)
     uneven = y.shape[1] % 2
     if uneven:
         y = y[0, :-1]
@@ -138,7 +140,7 @@ def get_hurst(story_arc):
     return hurst
 
 
-def cleaner(text, lower=False):
+def cleaner(text: str, lower=False) -> str:
     text = re.sub(r"[0-9]", "", text)
     text = re.sub(r'[,.;:"?!*()\']', "", text)
     text = re.sub(r"-", " ", text)
@@ -177,7 +179,7 @@ def text_entropy(text: str, base=2, asprob=True, clean=True):
         return entropy / total_len
 
 
-def text_readability(text):
+def text_readability(text: str):
     flesch_grade = textstat.flesch_kincaid_grade(text)
     flesch_ease = textstat.flesch_reading_ease(text)
     smog = textstat.smog_index(text)
