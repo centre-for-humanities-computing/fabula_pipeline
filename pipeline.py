@@ -229,7 +229,7 @@ def main():
 
         # basic sentiment features
         if len(arc) < 60:
-            print(filename)
+            print(filename.name)
             print("arc not long enough")
             pass
         else:
@@ -239,7 +239,7 @@ def main():
                 temp["mean_sentiment_per_segment"],
                 temp["mean_sentiment_first_ten_percent"],
                 temp["mean_sentiment_last_ten_percent"],
-                temp["difference_lastten_the_rest"],
+                temp["difference_lastten_therest"],
             ) = get_basic_sentarc_features(arc)
 
         # approximate entropy
