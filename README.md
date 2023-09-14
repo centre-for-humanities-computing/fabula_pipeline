@@ -48,3 +48,8 @@ The pipeline script will create a JSON-file in the `--out_dir` folder called `bo
 It is a nested dictionary, where the top-level key is the book id (without 0's), and the value is a dictionary where the keys are the name of the features and the values are the results for the features. 
 
  
+## Future implementations 
+
+- Making an optional argument, that specifies whether goodreads features should be run as well
+- Making a pipeline for Danish books 
+- Adding other book features from Fabula-NET
