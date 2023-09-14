@@ -24,8 +24,8 @@ import saffine.detrending_method as dm
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="FABULA-NET pipeline")
-    parser.add_argument("in_dir", nargs="?", type=str, default="test_files/")
-    parser.add_argument("out_dir", nargs="?", type=str, default="output/")
+    parser.add_argument("--in_dir", type=str)
+    parser.add_argument("--out_dir", type=str, default="output/")
 
     return parser
 
@@ -219,8 +219,8 @@ def main():
         ) = wordcount_wordlen_msttr(text)
         # for sentences
         if len(sents) < 1502:
-            print(filename.name)
-            print("text not long enough")
+            print(f"\n{filename.name}")
+            print("text not long enough for stylometrics\n")
             pass
         else:
             (
@@ -231,8 +231,8 @@ def main():
 
         # basic sentiment features
         if len(arc) < 60:
-            print(filename.name)
-            print("arc not long enough")
+            print(f"\n{filename.name}")
+            print("arc not long enough for basic sentiment features\n")
             pass
         else:
             (
@@ -250,24 +250,24 @@ def main():
                 arc, dimension=2, tolerance="sd"
             )
         except:
-            print(filename.name)
-            print("error with approximate entropy")
+            print(f"\n{filename.name}")
+            print("error with approximate entropy\n")
             pass
 
         # hurst
         try:
             temp["hurst"] = get_hurst(arc)
         except:
-            print(filename.name)
-            print("error with hurst")
+            print(f"\n{filename.name}")
+            print("error with hurst\n")
             pass
 
         # bigram entropy
         try:
             temp["bigram_entropy"] = text_entropy(text, 2, asprob=False)
         except:
-            print(filename.name)
-            print("error in bigram entropy")
+            print(f"\n{filename.name}")
+            print("error in bigram entropy\n")
             pass
 
         # readability
@@ -281,8 +281,8 @@ def main():
             ) = text_readability(text)
 
         except:
-            print(filename.name)
-            print("error in readability")
+            print(f"\n{filename.name}")
+            print("error in readability\n")
             pass
 
         # save arc
@@ -290,7 +290,6 @@ def main():
 
         # saving it all
         master_dict[filename.stem[3:]] = temp
-        print("-")
 
     print("finished loop")
 
