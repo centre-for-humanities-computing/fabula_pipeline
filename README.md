@@ -12,11 +12,11 @@ Features outputed:
 - Sentiment arc:
     - mean & standard deviation
     - mean sentiment for each segment
-    - mean sentiment for first 10%, last 10% 
+    - mean sentiment for first 10%, mean sentiment for last 10% 
     - difference in sentiment between last 10% and the rest of the sentiment arc
 - Approximate entropy
 - Hurst 
-- Bigram Entripy 
+- Bigram entropy 
 - Readability:
     - flesch grade, flesch ease, smog, ari, dale chall new
 
