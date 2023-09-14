@@ -4,7 +4,7 @@
 This pipeline (currently) takes a folder containing books in .txt format and outputs a JSON-file containing the different literary features developed / used by the Fabula-NET team at Aarhus University.
 Currently only English is supported. 
 
-Features outputted: 
+Features outputed: 
 
 - Stylometrics:
     - word count, mean word length, MSTTR
