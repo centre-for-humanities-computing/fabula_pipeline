@@ -65,28 +65,30 @@ The pipeline script will create a JSON-file in the `--out_dir` folder called `bo
 It is a nested dictionary, where the top-level key is the book id (without 0's), and the value is a dictionary where the keys are the name of the features and the values are the results for the features. 
 E.g.,
 
-{"34231": {word_count: int, \n
-            average_wordlen: float,\n
-            msttr: float,\n
-            average_sentlen: float,\n
-            gzipr: float,\n
-            bzipr: float,\n
-            mean_sentiment: float,\n
-            std_sentiment: float,\n
-            mean_sentiment_per_segment: list,\n
-            mean_sentiment_first_ten_percent: float,\n
-            mean_sentiment_last_ten_percent: float,\n
-            difference_lastten_therest: float,\n
-            approximate_entropy: list,\n
-            hurst: float,\n
-            bigram_entropy: float,\n
-            flesch_grade: float,\n
-            flesch_ease: float,\n
-            smog: float,\n
-            ari: float,\n
-            dale_chall_new: float,\n
-            arc: list}}\n
-
+    {"34231": 
+        {word_count: int, 
+            average_wordlen: float,
+            msttr: float,
+            average_sentlen: float,
+            gzipr: float,
+            bzipr: float,
+            mean_sentiment: float,
+            std_sentiment: float,
+            mean_sentiment_per_segment: list,
+            mean_sentiment_first_ten_percent: float,
+            mean_sentiment_last_ten_percent: float,
+            difference_lastten_therest: float,
+            approximate_entropy: list,
+            hurst: float,
+            bigram_entropy: float,
+            flesch_grade: float,
+            flesch_ease: float,
+            smog: float,
+            ari: float,
+            dale_chall_new: float,
+            arc: list
+            }
+        }
  
 ## Future implementations 
 
