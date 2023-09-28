@@ -37,7 +37,7 @@ def extract_text(filename: str) -> str:
         return text
 
 
-def avg_word_len(words: list[str]) -> float:
+def avg_wordlen(words: list[str]) -> float:
     # Avg. wordlength
     len_all_words = [len(word) for word in words]
     avg_word_length = sum(len_all_words) / len(words)
@@ -47,7 +47,7 @@ def avg_word_len(words: list[str]) -> float:
 def avg_sentlen(sents: list[str]) -> float:
     # average sentence length – sum of sentence lengths divided by no. of sentences
     avg_sentlen = sum([len(sent) for sent in sents]) / len(sents)
-    return avg_senlen
+    return avg_sentlen
 
 
 def compressrat(sents: list[str]):
