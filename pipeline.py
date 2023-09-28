@@ -20,6 +20,7 @@ import textstat
 
 import saffine.multi_detrending as md
 import saffine.detrending_method as dm
+from roget import *
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -190,17 +191,45 @@ def text_readability(text: str):
 
     return flesch_grade, flesch_ease, smog, ari, dale_chall_new
 
+def get_spacy_attributes(token):
+    token_i = token.i
+    text = token.text
+    lemma = token.lemma_
+    is_punct = token.is_punct
+    is_stop = token.is_stop
+    morph = token.morph
+    pos = token.pos_
+    tag = token.tag_
+    dep = token.dep_
+    head = token.head
+    head_i = token.head.i
+    ent_type = token.ent_type_
 
-def main():
-    print("load NLTK stuff")
-    nltk.download("vader_lexicon")
-    nltk.download("punkt")
+    # Save all token attributes in a list 
+    token_attributes = [token_i, text, lemma, is_punct, is_stop, morph, pos, tag, dep, head, head_i, ent_type]
 
+    return token_attributes
+
+
+def create_spacy_df(doc_attributes: list) -> pd.DataFrame:
+    df_attributes = pd.DataFrame(doc_attributes, columns = ["token_i", "token_text", "token_lemma_", "token_is_punct", 
+                                                                "token_is_stop", "token_morph", "token_pos_", "token_tag_", 
+                                                                "token_dep_", "token_head", "token_head_i", "token_ent_type_"])
+    return df_attributes
+
+
+def main():    
     parser = create_parser()
     args = parser.parse_args()
 
     in_dir = Path(args.in_dir)
     out_dir = Path(args.out_dir)
+
+    print("loading nltk and spacy things")
+    nltk.download("vader_lexicon")
+    nltk.download("punkt")
+    nlp = spacy.load("en_core_web_sm")
+    nlp.max_length = 3500000
 
     master_dict = {}
 
@@ -286,6 +315,22 @@ def main():
             print(f"\n{filename.name}")
             print("error in readability\n")
             pass
+
+        # spacy
+        spacy_attributes = []
+        for token in nlp(text):
+            token_attributes = get_spacy_attributes(text)
+            spacy_attributes.append(token_attributes)
+
+        spacy_df = create_spacy_df(spacy_attributes)
+
+        Path(f"{out_dir}/spacy_books/").mkdir(exist_ok=True)
+        spacy_df.to_csv(f"{out_dir}/spacy_books/{filename.stem[3:]}_spacy.csv")
+
+        # roget
+        all_roget_categories = roget.list_all_categories()
+
+        
 
         # save arc
         temp["arc"] = arc
