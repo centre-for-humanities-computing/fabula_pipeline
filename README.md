@@ -11,7 +11,7 @@ Features outputed:
     - mean sentence length, GZIPR, BZIPR
 - Sentiment arc:
     - mean & standard deviation
-    - mean sentiment for each segment
+    - mean sentiment for each segment (arc divided into 20 segments)
     - mean sentiment for first 10%, mean sentiment for last 10% 
     - difference in sentiment between last 10% and the rest of the sentiment arc
 - Approximate entropy
