@@ -1,5 +1,15 @@
-# this pipeline assumes that books are saved as txt-files within a folder :)
-# A CLI that takes an input direcotry and an output directory
+"""
+ this pipeline assumes that books are saved as txt-files within a folder :)
+ A CLI that takes an input direcotry and an output directory
+ 
+TO DO:
+[ ] setup try/except for spacy and roget
+[ ] implement language argument
+[ ] implement danish pipeline 
+[ ] fix pandas SettingWithCopyWarning
+[ ] the roget categories don't seem right or ?? 
+
+"""
 import argparse
 import bz2
 from collections import Counter
@@ -16,11 +26,12 @@ from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import numpy as np
+import pandas as pd
+import spacy
 import textstat
 
 import saffine.multi_detrending as md
-import saffine.detrending_method as dm
-from roget import *
+import roget.roget as roget
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -191,6 +202,7 @@ def text_readability(text: str):
 
     return flesch_grade, flesch_ease, smog, ari, dale_chall_new
 
+
 def get_spacy_attributes(token):
     token_i = token.i
     text = token.text
@@ -205,20 +217,71 @@ def get_spacy_attributes(token):
     head_i = token.head.i
     ent_type = token.ent_type_
 
-    # Save all token attributes in a list 
-    token_attributes = [token_i, text, lemma, is_punct, is_stop, morph, pos, tag, dep, head, head_i, ent_type]
+    # Save all token attributes in a list
+    token_attributes = [
+        token_i,
+        text,
+        lemma,
+        is_punct,
+        is_stop,
+        morph,
+        pos,
+        tag,
+        dep,
+        head,
+        head_i,
+        ent_type,
+    ]
 
     return token_attributes
 
 
 def create_spacy_df(doc_attributes: list) -> pd.DataFrame:
-    df_attributes = pd.DataFrame(doc_attributes, columns = ["token_i", "token_text", "token_lemma_", "token_is_punct", 
-                                                                "token_is_stop", "token_morph", "token_pos_", "token_tag_", 
-                                                                "token_dep_", "token_head", "token_head_i", "token_ent_type_"])
+    df_attributes = pd.DataFrame(
+        doc_attributes,
+        columns=[
+            "token_i",
+            "token_text",
+            "token_lemma_",
+            "token_is_punct",
+            "token_is_stop",
+            "token_morph",
+            "token_pos_",
+            "token_tag_",
+            "token_dep_",
+            "token_head",
+            "token_head_i",
+            "token_ent_type_",
+        ],
+    )
     return df_attributes
 
 
-def main():    
+def filter_spacy_df(df: pd.DataFrame) -> pd.DataFrame:
+    spacy_pos = ["NOUN", "VERB", "ADJ", "INTJ"]
+
+    filtered_df = df.loc[
+        (df["token_is_punct"] == False)
+        & (df["token_is_stop"] == False)
+        & (df["token_pos_"].isin(spacy_pos))
+    ]
+
+    filtered_df["token_roget_pos_"] = filtered_df["token_pos_"].map(
+        {"NOUN": "N", "VERB": "V", "ADJ": "ADJ", "INTJ": "INT"}
+    )
+    return filtered_df
+
+
+def get_token_categories(df: pd.DataFrame) -> str:
+    token_categories = df.apply(
+        lambda row: roget.categories(str(row["token_lemma_"]), row["token_roget_pos_"]),
+        axis=1,
+    ).to_string()
+
+    return token_categories
+
+
+def main():
     parser = create_parser()
     args = parser.parse_args()
 
@@ -228,7 +291,13 @@ def main():
     print("loading nltk and spacy things")
     nltk.download("vader_lexicon")
     nltk.download("punkt")
-    nlp = spacy.load("en_core_web_sm")
+    try:
+        nlp = spacy.load("en_core_web_sm")
+    except OSError as e:
+        raise OSError(
+            "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
+        ) from e
+
     nlp.max_length = 3500000
 
     master_dict = {}
@@ -319,7 +388,7 @@ def main():
         # spacy
         spacy_attributes = []
         for token in nlp(text):
-            token_attributes = get_spacy_attributes(text)
+            token_attributes = get_spacy_attributes(token)
             spacy_attributes.append(token_attributes)
 
         spacy_df = create_spacy_df(spacy_attributes)
@@ -330,7 +399,18 @@ def main():
         # roget
         all_roget_categories = roget.list_all_categories()
 
-        
+        roget_df = filter_spacy_df(spacy_df)
+
+        temp["roget_n_tokens"] = len(spacy_df)
+        temp["roget_n_tokens_filtered"] = len(roget_df)
+
+        token_categories = get_token_categories(roget_df)
+        doc_categories = re.findall(r"(rog\d{3} \w*)", token_categories)
+
+        for roget_cat in all_roget_categories:
+            temp[roget_cat] = doc_categories.count(roget_cat)
+
+        temp["roget_n_cats"] = len(doc_categories)
 
         # save arc
         temp["arc"] = arc
