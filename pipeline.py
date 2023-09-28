@@ -37,23 +37,20 @@ def extract_text(filename: str) -> str:
         return text
 
 
-def wordcount_wordlen_msttr(text: str):
-    # tokenize
-    words = word_tokenize(text)
-    # Wordcount
-    count = len(words)
+def avg_word_len(words: list[str]) -> float:
     # Avg. wordlength
     len_all_words = [len(word) for word in words]
-    avg_word_length = sum(len_all_words) / count
-    # MSTTR-100
-    msttr = ld.msttr(words, window_length=100)
-    return count, avg_word_length, msttr
+    avg_word_length = sum(len_all_words) / len(words)
+    return avg_word_length
 
 
-def avgsentlen_compressrat(sents: list[str]):
+def avg_sentlen(sents: list[str]) -> float:
     # average sentence length – sum of sentence lengths divided by no. of sentences
     avg_sentlen = sum([len(sent) for sent in sents]) / len(sents)
+    return avg_senlen
 
+
+def compressrat(sents: list[str]):
     # taking only 1500 sentences (skipping the first that are often title etc)
     selection = sents[2:1502]
     asstring = " ".join(selection)  # making it a long string
@@ -67,7 +64,7 @@ def avgsentlen_compressrat(sents: list[str]):
     b_compr = bz2.compress(encoded, compresslevel=9)
     bzipr = len(encoded) / len(b_compr)
 
-    return avg_sentlen, gzipr, bzipr
+    return gzipr, bzipr
 
 
 def get_sentarc(sents: list[str]) -> list[float]:
@@ -91,16 +88,21 @@ def divide_segments(arc: list[float], n: int):
         yield arc[i : i + n]
 
 
+def get_segment_sentmeans(arc: list[float]) -> list[float]:
+    n_seg_items = len(arc) // 20
+    segments = divide_segments(arc, n_seg_items)
+
+    segment_means = [np.mean(segment) for segment in segments]
+    return segment_means
+
+
 def get_basic_sentarc_features(arc: list[float]):
     # basic features
     mean_sent = np.mean(arc)
     std_sent = np.std(arc)
 
     # split into 20 segments and get mean for each segment
-    n_seg_items = len(arc) // 20
-    segments = divide_segments(arc, n_seg_items)
-
-    segment_means = [np.mean(segment) for segment in segments]
+    segment_means = get_segment_sentmeans(arc)
 
     # mean of first 10%, mean of last 10%
     n_ten_items = len(arc) // 10
@@ -208,26 +210,26 @@ def main():
 
         text = extract_text(filename)
         sents = sent_tokenize(text)
+        words = word_tokenize(text)
         arc = get_sentarc(sents)
 
         # stylometrics
         # for words
-        (
-            temp["word_count"],
-            temp["average_wordlen"],
-            temp["msttr"],
-        ) = wordcount_wordlen_msttr(text)
+        temp["word_count"] = len(words)
+        temp["average_wordlen"] = avg_wordlen(words)
+        temp["msttr"] = ld.msttr(words, window_length=100)
+
         # for sentences
         if len(sents) < 1502:
             print(f"\n{filename.name}")
             print("text not long enough for stylometrics\n")
             pass
         else:
+            temp["average_sentlen"] = avg_sentlen(sents)
             (
-                temp["average_sentlen"],
                 temp["gzipr"],
                 temp["bzipr"],
-            ) = avgsentlen_compressrat(sents)
+            ) = compressrat(sents)
 
         # basic sentiment features
         if len(arc) < 60:
@@ -236,7 +238,7 @@ def main():
             pass
         else:
             (
-                temp["mean sentiment"],
+                temp["mean_sentiment"],
                 temp["std_sentiment"],
                 temp["mean_sentiment_per_segment"],
                 temp["mean_sentiment_first_ten_percent"],

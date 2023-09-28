@@ -1,6 +1,9 @@
+dframcy>=0.1.6
 lexical_diversity>=0.1.1
 neurokit2>=0.2.5
 nltk>=3.8.1
 numpy>=1.25.2
+openpyxl>=3.1.2
 requests>=2.31.0
+spacy>=3.6.1
 textstat>=0.7.3
