@@ -38,6 +38,7 @@ def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="FABULA-NET pipeline")
     parser.add_argument("--in_dir", type=str)
     parser.add_argument("--out_dir", type=str, default="output/")
+    parser.add_argument("--language", "-lang", type=str, default="english")
 
     return parser
 
@@ -166,11 +167,11 @@ def cleaner(text: str, lower=False) -> str:
     return text
 
 
-def text_entropy(text: str, base=2, asprob=True, clean=True):
+def text_entropy(text: str, language: str, base=2, asprob=True, clean=True):
     if clean:
         text = cleaner(text)
 
-    words = word_tokenize(text)
+    words = word_tokenize(text, language=language)
     total_len = len(words) - 1
     transform_prob = Counter()
 
@@ -204,33 +205,20 @@ def text_readability(text: str):
 
 
 def get_spacy_attributes(token):
-    token_i = token.i
-    text = token.text
-    lemma = token.lemma_
-    is_punct = token.is_punct
-    is_stop = token.is_stop
-    morph = token.morph
-    pos = token.pos_
-    tag = token.tag_
-    dep = token.dep_
-    head = token.head
-    head_i = token.head.i
-    ent_type = token.ent_type_
-
     # Save all token attributes in a list
     token_attributes = [
-        token_i,
-        text,
-        lemma,
-        is_punct,
-        is_stop,
-        morph,
-        pos,
-        tag,
-        dep,
-        head,
-        head_i,
-        ent_type,
+        token.i,
+        token.text,
+        token.lemma_,
+        token.is_punct,
+        token.is_stop,
+        token.morph,
+        token.pos_,
+        token.tag_,
+        token.dep_,
+        token.head,
+        token.head.i,
+        token.ent_type_,
     ]
 
     return token_attributes
@@ -272,6 +260,11 @@ def filter_spacy_df(df: pd.DataFrame) -> pd.DataFrame:
     return filtered_df
 
 
+def save_spacy_df(spacy_df, filename, out_dir):
+    Path(f"{out_dir}/spacy_books/").mkdir(exist_ok=True)
+    spacy_df.to_csv(f"{out_dir}/spacy_books/{filename.stem}_spacy.csv")
+
+
 def get_token_categories(df: pd.DataFrame) -> str:
     token_categories = df.apply(
         lambda row: roget.categories(str(row["token_lemma_"]), row["token_roget_pos_"]),
@@ -288,15 +281,26 @@ def main():
     in_dir = Path(args.in_dir)
     out_dir = Path(args.out_dir)
 
-    print("loading nltk and spacy things")
-    nltk.download("vader_lexicon")
     nltk.download("punkt")
-    try:
-        nlp = spacy.load("en_core_web_sm")
-    except OSError as e:
-        raise OSError(
-            "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
-        ) from e
+
+    if args.lang == "english":
+        nltk.download("vader_lexicon")
+
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError as e:
+            raise OSError(
+                "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
+            ) from e
+
+    elif args.lang == "danish":
+        try:
+            nlp = spacy.load("da_core_news_sm")
+
+        except OSError as e:
+            raise OSError(
+                "da_core_news_sm not downloaded, run python3 -m spacy download da_core_news_sm"
+            ) from e
 
     nlp.max_length = 3500000
 
@@ -307,9 +311,19 @@ def main():
         temp = {}
 
         text = extract_text(filename)
-        sents = sent_tokenize(text)
-        words = word_tokenize(text)
-        arc = get_sentarc(sents)
+
+        sents = sent_tokenize(text, language=args.lang)
+        words = word_tokenize(text, language=args.lang)
+
+        # spacy
+        spacy_attributes = []
+        for token in nlp(text):
+            token_attributes = get_spacy_attributes(token)
+            spacy_attributes.append(token_attributes)
+
+        spacy_df = create_spacy_df(spacy_attributes)
+
+        save_spacy_df(spacy_df, filename, out_dir)
 
         # stylometrics
         # for words
@@ -329,94 +343,90 @@ def main():
                 temp["bzipr"],
             ) = compressrat(sents)
 
-        # basic sentiment features
-        if len(arc) < 60:
-            print(f"\n{filename.name}")
-            print("arc not long enough for basic sentiment features\n")
-            pass
-        else:
-            (
-                temp["mean_sentiment"],
-                temp["std_sentiment"],
-                temp["mean_sentiment_per_segment"],
-                temp["mean_sentiment_first_ten_percent"],
-                temp["mean_sentiment_last_ten_percent"],
-                temp["difference_lastten_therest"],
-            ) = get_basic_sentarc_features(arc)
-
-        # approximate entropy
-        try:
-            temp["approximate_entropy"] = nk.entropy_approximate(
-                arc, dimension=2, tolerance="sd"
-            )
-        except:
-            print(f"\n{filename.name}")
-            print("error with approximate entropy\n")
-            pass
-
-        # hurst
-        try:
-            temp["hurst"] = get_hurst(arc)
-        except:
-            print(f"\n{filename.name}")
-            print("error with hurst\n")
-            pass
-
         # bigram entropy
         try:
-            temp["bigram_entropy"] = text_entropy(text, 2, asprob=False)
+            temp["bigram_entropy"] = text_entropy(
+                text, language=args.lang, base=2, asprob=False
+            )
         except:
             print(f"\n{filename.name}")
             print("error in bigram entropy\n")
             pass
 
-        # readability
-        try:
-            (
-                temp["flesch_grade"],
-                temp["flesch_ease"],
-                temp["smog"],
-                temp["ari"],
-                temp["dale_chall_new"],
-            ) = text_readability(text)
+        # doing stuff that only works in english
+        if args.lang == "english":
+            # basic sentiment features
 
-        except:
-            print(f"\n{filename.name}")
-            print("error in readability\n")
-            pass
+            arc = get_sentarc(sents)
 
-        # spacy
-        spacy_attributes = []
-        for token in nlp(text):
-            token_attributes = get_spacy_attributes(token)
-            spacy_attributes.append(token_attributes)
+            if len(arc) < 60:
+                print(f"\n{filename.name}")
+                print("arc not long enough for basic sentiment features\n")
+                pass
+            else:
+                (
+                    temp["mean_sentiment"],
+                    temp["std_sentiment"],
+                    temp["mean_sentiment_per_segment"],
+                    temp["mean_sentiment_first_ten_percent"],
+                    temp["mean_sentiment_last_ten_percent"],
+                    temp["difference_lastten_therest"],
+                ) = get_basic_sentarc_features(arc)
 
-        spacy_df = create_spacy_df(spacy_attributes)
+            # approximate entropy
+            try:
+                temp["approximate_entropy"] = nk.entropy_approximate(
+                    arc, dimension=2, tolerance="sd"
+                )
+            except:
+                print(f"\n{filename.name}")
+                print("error with approximate entropy\n")
+                pass
 
-        Path(f"{out_dir}/spacy_books/").mkdir(exist_ok=True)
-        spacy_df.to_csv(f"{out_dir}/spacy_books/{filename.stem[3:]}_spacy.csv")
+            # hurst
+            try:
+                temp["hurst"] = get_hurst(arc)
+            except:
+                print(f"\n{filename.name}")
+                print("error with hurst\n")
+                pass
 
-        # roget
-        all_roget_categories = roget.list_all_categories()
+                # readability
+            try:
+                (
+                    temp["flesch_grade"],
+                    temp["flesch_ease"],
+                    temp["smog"],
+                    temp["ari"],
+                    temp["dale_chall_new"],
+                ) = text_readability(text)
 
-        roget_df = filter_spacy_df(spacy_df)
+            except:
+                print(f"\n{filename.name}")
+                print("error in readability\n")
+                pass
 
-        temp["roget_n_tokens"] = len(spacy_df)
-        temp["roget_n_tokens_filtered"] = len(roget_df)
+            # roget
+            all_roget_categories = roget.list_all_categories()
 
-        token_categories = get_token_categories(roget_df)
-        doc_categories = re.findall(r"(rog\d{3} \w*)", token_categories)
+            roget_df = filter_spacy_df(spacy_df)
 
-        for roget_cat in all_roget_categories:
-            temp[roget_cat] = doc_categories.count(roget_cat)
+            temp["roget_n_tokens"] = len(spacy_df)
+            temp["roget_n_tokens_filtered"] = len(roget_df)
 
-        temp["roget_n_cats"] = len(doc_categories)
+            token_categories = get_token_categories(roget_df)
+            doc_categories = re.findall(r"(rog\d{3} \w*)", token_categories)
 
-        # save arc
-        temp["arc"] = arc
+            for roget_cat in all_roget_categories:
+                temp[roget_cat] = doc_categories.count(roget_cat)
+
+            temp["roget_n_cats"] = len(doc_categories)
+
+            # save arc
+            temp["arc"] = arc
 
         # saving it all
-        master_dict[filename.stem[3:]] = temp
+        master_dict[filename.stem] = temp
 
     print("finished loop")
 
