@@ -1,13 +1,14 @@
 """
  this pipeline assumes that books are saved as txt-files within a folder :)
- A CLI that takes an input direcotry and an output directory
  
 TO DO:
-[ ] setup try/except for spacy and roget
-[ ] implement language argument
-[ ] implement danish pipeline 
+[ ] setup try/except for roget
+[X] implement language argument
+[X] implement danish pipeline 
+    needs to be tested tho (6-10-2023)
 [ ] fix pandas SettingWithCopyWarning
 [ ] the roget categories don't seem right or ?? 
+[ ] make utils script? 
 
 """
 import argparse
@@ -44,27 +45,36 @@ def create_parser() -> argparse.ArgumentParser:
 
 
 def extract_text(filename: str) -> str:
-    # read the text from given filename
+    """
+    read the text from given filename
+    """
     with open(filename, "r") as f:
         text = f.read()
         return text
 
 
 def avg_wordlen(words: list[str]) -> float:
-    # Avg. wordlength
+    """
+    calculates average wordlength from a list of words
+    """
     len_all_words = [len(word) for word in words]
     avg_word_length = sum(len_all_words) / len(words)
     return avg_word_length
 
 
 def avg_sentlen(sents: list[str]) -> float:
-    # average sentence length – sum of sentence lengths divided by no. of sentences
+    """
+    calculates average sentence length from a list of sentences
+    """
     avg_sentlen = sum([len(sent) for sent in sents]) / len(sents)
     return avg_sentlen
 
 
 def compressrat(sents: list[str]):
-    # taking only 1500 sentences (skipping the first that are often title etc)
+    """
+    Calculates the GZIP compress ratio and BZIP compress ratio for the first 1500 sentences in a list of sentences
+    """
+    # skipping the first that are often title etc
     selection = sents[2:1502]
     asstring = " ".join(selection)  # making it a long string
     encoded = asstring.encode()  # encoding for the compression
@@ -81,7 +91,10 @@ def compressrat(sents: list[str]):
 
 
 def get_sentarc(sents: list[str]) -> list[float]:
-    # this is mainly from figs.py
+    """
+    Create a sentiment arc from a list of sentences
+    """
+    # code taken mainly from figs.py
     sid = SentimentIntensityAnalyzer()
 
     arc = []
@@ -97,11 +110,17 @@ def integrate(x: list[float]) -> np.matrix:
 
 
 def divide_segments(arc: list[float], n: int):
+    """
+    divide a list of floats into segments of the specified number of items
+    """
     for i in range(0, len(arc), n):
         yield arc[i : i + n]
 
 
 def get_segment_sentmeans(arc: list[float]) -> list[float]:
+    """
+    get the mean sentiment for each of the 20 segments of a sentiment arc (list of floats).
+    """
     n_seg_items = len(arc) // 20
     segments = divide_segments(arc, n_seg_items)
 
@@ -110,6 +129,9 @@ def get_segment_sentmeans(arc: list[float]) -> list[float]:
 
 
 def get_basic_sentarc_features(arc: list[float]):
+    """
+    calculates basic features of the sentiment arc.
+    """
     # basic features
     mean_sent = np.mean(arc)
     std_sent = np.std(arc)
