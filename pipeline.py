@@ -195,15 +195,20 @@ def text_entropy(text: str, language: str, base=2, asprob=True, clean=True):
 
     words = word_tokenize(text, language=language)
     total_len = len(words) - 1
-    transform_prob = Counter()
+    bigram_transform_prob = Counter()
+    word_transform_prob = Counter()
 
     # Loop through each word in the cleaned text and calculate the probability of each bigram
     for i, word in enumerate(words):
         if i == 0:
+            word_transform_prob[word]+=1
+
             # very first word gets assigned as first pre
             pre = word
             continue
-        transform_prob[(pre, word)] += 1
+
+        word_transform_prob[word] += 1
+        bigram_transform_prob[(pre, word)] += 1
         pre = word
 
     # return transformation probability if asprob is set to true
@@ -212,8 +217,16 @@ def text_entropy(text: str, language: str, base=2, asprob=True, clean=True):
     # if not, calculate the entropy and return that
     if not asprob:
         log_n = log(total_len, base)
-        entropy = sum([-x * (log(x, base) - log_n) for x in transform_prob.values()])
-        return entropy / total_len
+
+        bigram_entropy = cal_entropy(base, log_n, bigram_transform_prob)
+        word_entropy = cal_entropy(base, log_n, word_transform_prob)
+
+        return bigram_entropy / total_len, word_entropy / total_len
+
+
+def cal_entropy(base, log_n, transform_prob):
+    entropy = sum([-x * (log(x, base) - log_n) for x in transform_prob.values()])
+    return entropy
 
 
 def text_readability(text: str):
@@ -367,7 +380,7 @@ def main():
 
         # bigram entropy
         try:
-            temp["bigram_entropy"] = text_entropy(
+            temp["bigram_entropy"], temp["word_entropy"] = text_entropy(
                 text, language=args.lang, base=2, asprob=False
             )
         except:
