@@ -1,3 +1,4 @@
+afinn>=0.1
 dframcy>=0.1.6
 lexical_diversity>=0.1.1
 neurokit2>=0.2.5

@@ -20,6 +20,7 @@ from math import log
 import re
 from pathlib import Path
 
+from afinn import Afinn
 from lexical_diversity import lex_div as ld
 import neurokit2 as nk
 import nltk
@@ -295,7 +296,7 @@ def filter_spacy_df(df: pd.DataFrame) -> pd.DataFrame:
     return filtered_df
 
 
-def save_spacy_df(spacy_df, filename, out_dir):
+def save_spacy_df(spacy_df, filename, out_dir) -> None:
     Path(f"{out_dir}/spacy_books/").mkdir(exist_ok=True)
     spacy_df.to_csv(f"{out_dir}/spacy_books/{filename.stem}_spacy.csv")
 
@@ -387,6 +388,7 @@ def main():
             print(f"\n{filename.name}")
             print("error in bigram entropy\n")
             pass
+
 
         # doing stuff that only works in english
         if args.lang == "english":
