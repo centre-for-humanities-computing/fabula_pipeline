@@ -15,6 +15,35 @@ import saffine.multi_detrending as md
 import roget.roget as roget
 
 
+def check_args(args):
+    """
+    checks whether the arguments provided are compatible / are supported by the pipe
+    """
+    # checking for the language is supported
+    if args.lang not in ["english", "danish"]:
+        return f"language not supported: {args.lang}"
+    # checking the sentiment method is supported
+    elif args.sentiment_method not in [
+        "vader",
+        "syuzhet",
+        "afinn",
+        "avg_vader_syuzhet",
+    ]:
+        return f"sentiment method not supported: {args.sentiment_method}"
+    # checking that syuzhet is not trying to be run on ucloud
+    elif args.ucloud and "syuzhet" in args.sentiment_method:
+        return "you cannot do syuzhet on ucloud"
+    # checking that vader and syuzhet are not being used with danish books
+    elif args.lang == "danish" and args.sentiment_method in [
+        "vader",
+        "syuzhet",
+        "avg_vader_syuzhet",
+    ]:
+        return f"you cannot do {args.sentiment_method} in {args.lang}"
+    else:
+        return None
+
+
 def extract_text(filename: str) -> str:
     """
     read the text from given filename
@@ -61,7 +90,7 @@ def compressrat(sents: list[str]):
     return gzipr, bzipr
 
 
-def get_sentarc(sents: list[str]) -> list[float]:
+def get_sentarc(sents: list[str], args.sentiment_method: str) -> list[float]:
     """
     Create a sentiment arc from a list of sentences
     """

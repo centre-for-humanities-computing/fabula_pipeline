@@ -3,7 +3,7 @@
  
 TO DO:
 [ ] implement afinn for danish
-[ ] add ucloud / local argument
+[X] add ucloud argument
 [ ] add vader / syuzhet / avg of both arugment 
 [ ] setup try/except for roget
 [X] implement language argument
@@ -47,11 +47,16 @@ def main():
     in_dir = Path(args.in_dir)
     out_dir = Path(args.out_dir)
 
+    incompatible_args = check_args(args)
+
+    if incompatible_args != None:
+        raise ValueError(
+            f"following arguments are incompatble or not supported: {incompatible_args}"
+        )
+
     nltk.download("punkt")
 
     if args.lang == "english":
-        nltk.download("vader_lexicon")
-
         try:
             nlp = spacy.load("en_core_web_sm")
         except OSError as e:
@@ -71,6 +76,12 @@ def main():
     nlp.max_length = 3500000
 
     master_dict = {}
+
+    # checking that there are actually files in that folder
+    if list(Path(in_dir).glob("*.txt")) == []:
+        raise ValueError(
+            "The folder specified as --in_dir containes no .txt files. Check the path is correct"
+        )
 
     print("starting loop")
     for filename in Path(in_dir).glob("*.txt"):
@@ -96,6 +107,7 @@ def main():
         temp["word_count"] = len(words)
         temp["average_wordlen"] = avg_wordlen(words)
         temp["msttr"] = ld.msttr(words, window_length=100)
+        print("made it to spacy", temp)
 
         # for sentences
         if len(sents) < 1502:
@@ -109,21 +121,24 @@ def main():
                 temp["bzipr"],
             ) = compressrat(sents)
 
-        # bigram entropy
+        # bigram and word entropy
         try:
             temp["bigram_entropy"], temp["word_entropy"] = text_entropy(
                 text, language=args.lang, base=2, asprob=False
             )
         except:
             print(f"\n{filename.name}")
-            print("error in bigram entropy\n")
+            print("error in bigram and/or word entropy\n")
             pass
 
         # doing stuff that only works in english
         if args.lang == "english":
-            # basic sentiment features
+            # setting up sentiment analyzer
+            if "vader" in args.sentiment_method:
+                nltk.download("vader_lexicon")
 
-            arc = get_sentarc(sents)
+            # basic sentiment features
+            arc = get_sentarc(sents, args.sentiment_method)
 
             if len(arc) < 60:
                 print(f"\n{filename.name}")
