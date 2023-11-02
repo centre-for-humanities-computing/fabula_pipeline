@@ -9,6 +9,7 @@ from nltk.tokenize import word_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import numpy as np
 import pandas as pd
+import rpy2.robjects.packages as rpackages
 import textstat
 
 import saffine.multi_detrending as md
@@ -19,19 +20,8 @@ def check_args(args):
     """
     checks whether the arguments provided are compatible / are supported by the pipe
     """
-    # checking for the language is supported
-    if args.lang not in ["english", "danish"]:
-        return f"language not supported: {args.lang}"
-    # checking the sentiment method is supported
-    elif args.sentiment_method not in [
-        "vader",
-        "syuzhet",
-        "afinn",
-        "avg_vader_syuzhet",
-    ]:
-        return f"sentiment method not supported: {args.sentiment_method}"
     # checking that syuzhet is not trying to be run on ucloud
-    elif args.ucloud and "syuzhet" in args.sentiment_method:
+    if args.ucloud == True and "syuzhet" in args.sentiment_method:
         return "you cannot do syuzhet on ucloud"
     # checking that vader and syuzhet are not being used with danish books
     elif args.lang == "danish" and args.sentiment_method in [
@@ -90,19 +80,51 @@ def compressrat(sents: list[str]):
     return gzipr, bzipr
 
 
-def get_sentarc(sents: list[str], args.sentiment_method: str) -> list[float]:
+def prepare_syuzhet():
+    # import R's utility package
+    utils = rpackages.importr("utils")
+
+    # select a mirror for R packages
+    utils.chooseCRANmirror(ind=1)  # select the first mirror in the list
+
+    # install the package if is not already installed
+    if not rpackages.isinstalled("syuzhet"):
+        utils.install_packages("syuzhet")
+
+    return None
+
+
+def get_sentarc(sents: list[str], sent_method: str) -> list[float]:
     """
-    Create a sentiment arc from a list of sentences
+    Create a sentiment arc from a list of sentences.
+    Sent_method can be either vader, syuzhet, or avg_syuzhet_vader
     """
     # code taken mainly from figs.py
-    sid = SentimentIntensityAnalyzer()
+    if "vader" in sent_method:
+        sid = SentimentIntensityAnalyzer()
 
-    arc = []
-    for sentence in sents:
-        compound_pol = sid.polarity_scores(sentence)["compound"]
-        arc.append(compound_pol)
+        vader_arc = []
+        for sentence in sents:
+            compound_pol = sid.polarity_scores(sentence)["compound"]
+            vader_arc.append(compound_pol)
 
-    return arc
+        if "avg" not in sent_method:
+            return vader_arc
+
+    if "syuzhet" in sent_method:
+        prepare_syuzhet()
+
+        syuzhet = rpackages.importr("syuzhet")
+        syuzhet_arc = list(syuzhet.get_sentiment(sents, method="syuzhet"))
+
+        if "avg" not in sent_method:
+            return syuzhet_arc
+
+    if "avg" in sent_method:
+        sent_array = np.array([vader_arc, syuzhet_arc])
+        arc = list(np.mean(sent_array, axis=0))
+
+        return arc
 
 
 def integrate(x: list[float]) -> np.matrix:

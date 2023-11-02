@@ -1,1 +1,1 @@
-python3 src/pipeline.py --in_dir "short_test_files/" --out_dir "output/" -lang "english" --ucloud False -sent "vader"
+python3 src/pipeline.py --in_dir "../short_test_files/" --out_dir "output/" -lang "english" -sent "avg_syuzhet_vader"

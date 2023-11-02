@@ -31,11 +31,23 @@ from utils import *
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="FABULA-NET pipeline")
-    parser.add_argument("--in_dir", type=str)
+    parser.add_argument("--in_dir", type=str, required=True)
     parser.add_argument("--out_dir", type=str, default="output/")
-    parser.add_argument("-lang", type=str, default="english")
-    parser.add_argument("--ucloud", type=bool, default=True)
-    parser.add_argument("--sentiment_method", "-sent", type=str, default="vader")
+    parser.add_argument(
+        "-lang", choices=["english", "danish"], type=str, default="english"
+    )
+    parser.add_argument(
+        "--sentiment_method",
+        "-sent",
+        choices=["afinn", "vader", "syuzhet", "avg_syuzhet_vader"],
+        type=str,
+        default="vader",
+    )
+    parser.add_argument(
+        "--ucloud",
+        action="store_true",
+        help="set ucloud to true. otherwise it assumes local",
+    )
 
     return parser
 

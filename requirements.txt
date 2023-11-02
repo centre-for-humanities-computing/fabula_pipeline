@@ -6,5 +6,6 @@ nltk>=3.8.1
 numpy>=1.25.2
 openpyxl>=3.1.2
 requests>=2.31.0
+rpy2-3.5.14
 spacy>=3.6.1
 textstat>=0.7.3
