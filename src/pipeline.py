@@ -4,7 +4,7 @@
 TO DO:
 [ ] implement afinn for danish
 [X] add ucloud argument
-[ ] add vader / syuzhet / avg of both arugment 
+[X] add vader / syuzhet / avg of both arugment 
 [ ] setup try/except for roget
 [X] implement language argument
 [X] implement danish pipeline 
