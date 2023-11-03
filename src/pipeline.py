@@ -53,9 +53,7 @@ def main():
     incompatible_args = check_args(args)
 
     if incompatible_args != None:
-        raise ValueError(
-            f"following arguments are incompatble or not supported: {incompatible_args}"
-        )
+        raise ValueError(f"{incompatible_args}")
 
     nltk.download("punkt")
 
@@ -118,10 +116,7 @@ def main():
             pass
         else:
             temp["average_sentlen"] = avg_sentlen(sents)
-            (
-                temp["gzipr"],
-                temp["bzipr"],
-            ) = compressrat(sents)
+            temp["gzipr"], temp["bzipr"] = compressrat(sents)
 
         # bigram and word entropy
         try:
