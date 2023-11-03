@@ -2,24 +2,15 @@
  this pipeline assumes that books are saved as txt-files within a folder :)
  
 TO DO:
-[ ] implement afinn for danish
-[X] add ucloud argument
-[X] add vader / syuzhet / avg of both arugment 
 [ ] setup try/except for roget
-[X] implement language argument
-[X] implement danish pipeline 
-    needs to be tested tho (6-10-2023)
-    ran on all books on ucloud(2-11-2023)
 [ ] fix pandas SettingWithCopyWarning
 [ ] the roget categories don't seem right or ?? 
-[X] make utils script? 
 
 """
 import argparse
 import json
 from pathlib import Path
 
-from afinn import Afinn
 from lexical_diversity import lex_div as ld
 import neurokit2 as nk
 from nltk.tokenize import sent_tokenize
@@ -119,7 +110,6 @@ def main():
         temp["word_count"] = len(words)
         temp["average_wordlen"] = avg_wordlen(words)
         temp["msttr"] = ld.msttr(words, window_length=100)
-        print("made it to spacy", temp)
 
         # for sentences
         if len(sents) < 1502:
@@ -142,14 +132,14 @@ def main():
             print(f"\n{filename.name}")
             print("error in bigram and/or word entropy\n")
             pass
-    
+
         # setting up sentiment analyzer
         if "vader" in args.sentiment_method:
             nltk.download("vader_lexicon")
 
-        # basic sentiment features
-        arc = get_sentarc(sents, args.sentiment_method)
+        arc = get_sentarc(sents, args.sentiment_method, args.lang)
 
+        # basic sentiment features
         if len(arc) < 60:
             print(f"\n{filename.name}")
             print("arc not long enough for basic sentiment features\n")

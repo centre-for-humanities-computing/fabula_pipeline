@@ -5,6 +5,7 @@ from math import log
 import re
 from pathlib import Path
 
+from afinn import Afinn
 from nltk.tokenize import word_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import numpy as np
@@ -93,11 +94,11 @@ def prepare_syuzhet():
 def get_sentarc(sents: list[str], sent_method: str, lang: str) -> list[float]:
     """
     Create a sentiment arc from a list of sentences.
-    Sent_method can be either vader, syuzhet, or avg_syuzhet_vader
+    Sent_method can be either vader, syuzhet, or avg_syuzhet_vader.
+    Lang can be either english or danish.
     """
     if "afinn" in sent_method:
-        print(lang[:2])
-        afinn = Afinn(language = lang[:2])
+        afinn = Afinn(language=lang[:2])
         afinn_arc = [afinn.score(sentence) for sentence in sents]
 
         return afinn_arc
