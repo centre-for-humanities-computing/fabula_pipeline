@@ -2,27 +2,26 @@
 
 ## tl;dr
 This pipeline takes a folder containing books in .txt format and outputs a JSON-file containing the different literary features developed / used by the Fabula-NET team at Aarhus University.
-Currently only English and Danish is supported. 
+Currently only English and Danish are supported. 
 
-Features given no matter language: 
+Features given no matter the language: 
 
 - Stylometrics:
     - word count, mean word length, MSTTR
     - mean sentence length, GZIPR, BZIPR
 - Bigram entropy and word entropy
-
-Features given only for English:
-
 - Sentiment arc:
     - mean & standard deviation
     - mean sentiment for each segment (arc divided into 20 segments)
     - mean sentiment for first 10%, mean sentiment for last 10% 
     - difference in sentiment between last 10% and the rest of the sentiment arc
-- Approximate entropy
-- Hurst 
+    - Approximate entropy
+    - Hurst
+
+Features given only for English: 
 - Readability:
     - flesch grade, flesch ease, smog, ari, dale chall new
-- Roget Categorys
+- Roget Categories
 
 
 Additionally, for each text a CSV-file is produced that contains the token attributes from SpaCy which is saved in a folder called 'spacy_books/' within the specified output folder.
@@ -36,12 +35,12 @@ Install all requirements for the pipeline script.
 pip install -r requirements.txt
 ```
 
-The pipeline scripts assumes that the books, which should go through the pipeline, are in individual .txt-files and the filename corresponds to the book's id (5 integers) with three 0's in front. E.g.:
+The pipeline scripts assumes that the books, which should go through the pipeline, are in individual .txt-files with unique filenames, e.g.,: 
 
     book_files
-        \_ 00034231.txt
-        \_ 00018472.txt
-        \_ 00019923.txt
+        \_ 00000001.txt
+        \_ 00000002.txt
+        \_ 00000003.txt
         ..
         ..
 
@@ -55,11 +54,17 @@ The pipeline has five command-line argument:
 4. sentiment method (`--sentiment_method` or `sent`)
 5. ucloud (`--ucloud`)
 
+
 `--in_dir` should point to the folder containing the book files. 
-`--out_dir` specifies the folder the book features and SpaCy attributes is saved to. It defaults to a folder called `output/` (which will be created if it does not exist already), but can be used to point to a different folder.
+
+`--out_dir` specifies the folder the book features and SpaCy attributes are saved to. It defaults to a folder called `output/` (which will be created if it does not exist already), but can be used to point to a different folder.
+
 `-lang` specifies which language the books are in. For now only `english` and `danish` are supported. `english` is the deafult option.
-`--sentiment_method` specifies which method should be used for sentiment analysis for each sentence in the book. For now `vader`, `syuzhet`, and `avg_vader_syuzhet` are supported. The last options takes the mean of the two different methods for each sentence. Sentiment analysis does not work for Danish yet. 
+
+`--sentiment_method` specifies which method should be used for sentiment analysis for each sentence in the book. For now `afinn`, `vader`, `syuzhet`, and `avg_vader_syuzhet` are supported. The last options takes the mean of the two different methods for each sentence. If language is set to English, the sentiment method has to be `afinn`. 
+
 `--ucloud` is a flag that is used if the code is run on the cloud computing service UCloud. This is because the Syuzhet sentiment analysis does not currently work on UCloud. 
+
 
 To run the pipeline, go into the run_pipe.sh and set the command-line arguments to the desired values. Afterwards, the script can be run like this:
 
@@ -76,10 +81,10 @@ python3 src/pipeline.py --in_dir your/data/path/ --out_dir your/out/path/ -lang 
 ## Output
 The pipeline script will create a JSON-file in the `--out_dir` folder called `books_features.json`.
 
-It is a nested dictionary, where the top-level key is the book id (without 0's), and the value is a dictionary where the keys are the name of the features and the values are the results for the features. 
+It is a nested dictionary, where the top-level key is the filename wihtout the file extension, and the value is a dictionary where the keys are the name of the features and the values are the results for the features. 
 E.g.,
 
-    {"34231": 
+    {"00000001": 
         {word_count: int, 
             average_wordlen: float,
             msttr: float,
@@ -109,4 +114,3 @@ It will also create a folder called spacy_books/ within the `--out_dir` folder, 
 ## Future implementations 
 
 - Making an optional argument, that specifies whether goodreads features should be run as well
-- Sentiment analysis for Danish
