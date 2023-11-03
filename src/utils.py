@@ -24,11 +24,7 @@ def check_args(args):
     if args.ucloud == True and "syuzhet" in args.sentiment_method:
         return "you cannot do syuzhet on ucloud"
     # checking that vader and syuzhet are not being used with danish books
-    elif args.lang == "danish" and args.sentiment_method in [
-        "vader",
-        "syuzhet",
-        "avg_vader_syuzhet",
-    ]:
+    elif args.lang == "danish" and args.sentiment_method != "afinn":
         return f"you cannot do {args.sentiment_method} in {args.lang}"
     else:
         return None
@@ -94,11 +90,18 @@ def prepare_syuzhet():
     return None
 
 
-def get_sentarc(sents: list[str], sent_method: str) -> list[float]:
+def get_sentarc(sents: list[str], sent_method: str, lang: str) -> list[float]:
     """
     Create a sentiment arc from a list of sentences.
     Sent_method can be either vader, syuzhet, or avg_syuzhet_vader
     """
+    if "afinn" in sent_method:
+        print(lang[:2])
+        afinn = Afinn(language = lang[:2])
+        afinn_arc = [afinn.score(sentence) for sentence in sents]
+
+        return afinn_arc
+
     # code taken mainly from figs.py
     if "vader" in sent_method:
         sid = SentimentIntensityAnalyzer()

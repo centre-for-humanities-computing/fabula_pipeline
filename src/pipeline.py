@@ -142,49 +142,49 @@ def main():
             print(f"\n{filename.name}")
             print("error in bigram and/or word entropy\n")
             pass
+    
+        # setting up sentiment analyzer
+        if "vader" in args.sentiment_method:
+            nltk.download("vader_lexicon")
 
-        # doing stuff that only works in english
+        # basic sentiment features
+        arc = get_sentarc(sents, args.sentiment_method)
+
+        if len(arc) < 60:
+            print(f"\n{filename.name}")
+            print("arc not long enough for basic sentiment features\n")
+            pass
+        else:
+            (
+                temp["mean_sentiment"],
+                temp["std_sentiment"],
+                temp["mean_sentiment_per_segment"],
+                temp["mean_sentiment_first_ten_percent"],
+                temp["mean_sentiment_last_ten_percent"],
+                temp["difference_lastten_therest"],
+            ) = get_basic_sentarc_features(arc)
+
+        # approximate entropy
+        try:
+            temp["approximate_entropy"] = nk.entropy_approximate(
+                arc, dimension=2, tolerance="sd"
+            )
+        except:
+            print(f"\n{filename.name}")
+            print("error with approximate entropy\n")
+            pass
+
+        # hurst
+        try:
+            temp["hurst"] = get_hurst(arc)
+        except:
+            print(f"\n{filename.name}")
+            print("error with hurst\n")
+            pass
+
+        # doing the things that only work in English
         if args.lang == "english":
-            # setting up sentiment analyzer
-            if "vader" in args.sentiment_method:
-                nltk.download("vader_lexicon")
-
-            # basic sentiment features
-            arc = get_sentarc(sents, args.sentiment_method)
-
-            if len(arc) < 60:
-                print(f"\n{filename.name}")
-                print("arc not long enough for basic sentiment features\n")
-                pass
-            else:
-                (
-                    temp["mean_sentiment"],
-                    temp["std_sentiment"],
-                    temp["mean_sentiment_per_segment"],
-                    temp["mean_sentiment_first_ten_percent"],
-                    temp["mean_sentiment_last_ten_percent"],
-                    temp["difference_lastten_therest"],
-                ) = get_basic_sentarc_features(arc)
-
-            # approximate entropy
-            try:
-                temp["approximate_entropy"] = nk.entropy_approximate(
-                    arc, dimension=2, tolerance="sd"
-                )
-            except:
-                print(f"\n{filename.name}")
-                print("error with approximate entropy\n")
-                pass
-
-            # hurst
-            try:
-                temp["hurst"] = get_hurst(arc)
-            except:
-                print(f"\n{filename.name}")
-                print("error with hurst\n")
-                pass
-
-                # readability
+            # readability
             try:
                 (
                     temp["flesch_grade"],
