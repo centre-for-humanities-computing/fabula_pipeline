@@ -201,7 +201,7 @@ def main():
             temp["roget_n_cats"] = len(doc_categories)
 
             # save arc
-            temp["arc"] = arc
+        temp["arc"] = arc
 
         # saving it all
         master_dict[filename.stem] = temp
