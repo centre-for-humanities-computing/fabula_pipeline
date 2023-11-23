@@ -1,6 +1,6 @@
 # fabula_pipeline
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github.com/centre-for-humanities-computing/fabula_pipeline/blob/main/src/pipe_notebook.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/centre-for-humanities-computing/fabula_pipeline/blob/main/src/pipe_notebook.ipynb)
 
 
 ## tl;dr
