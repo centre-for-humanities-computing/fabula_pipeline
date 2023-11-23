@@ -1,5 +1,8 @@
 # fabula_pipeline
 
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github.com/centre-for-humanities-computing/fabula_pipeline/blob/main/src/pipe_notebook.ipynb)
+
+
 ## tl;dr
 This pipeline takes a folder containing books in .txt format and outputs a JSON-file containing the different literary features developed / used by the Fabula-NET team at Aarhus University.
 Currently only English and Danish are supported. 
