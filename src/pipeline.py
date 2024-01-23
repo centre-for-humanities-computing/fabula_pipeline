@@ -50,6 +50,8 @@ def main():
     in_dir = Path(args.in_dir)
     out_dir = Path(args.out_dir)
 
+    print("[INFO]: checking arguments and downloading nltk data")
+
     incompatible_args = check_args(args)
 
     if incompatible_args != None:
@@ -78,13 +80,15 @@ def main():
 
     master_dict = {}
 
+    print("[INFO]: checking folder")
+
     # checking that there are actually files in that folder
     if list(Path(in_dir).glob("*.txt")) == []:
         raise ValueError(
             "The folder specified as --in_dir containes no .txt files. Check the path is correct"
         )
 
-    print("starting loop")
+    print("[INFO]: starting loop")
 
     for filename in Path(in_dir).glob("*.txt"):
         temp = {}
@@ -203,14 +207,15 @@ def main():
         # saving it all
         master_dict[filename.stem] = temp
 
-    print("finished loop")
+    print("[INFO]: finished loop")
 
     Path(out_dir).mkdir(exist_ok=True)
 
-    print("saving file")
+    print("[INFO]: saving file")
     with open(out_dir.joinpath("books_features.json"), "w") as f:
         json.dump(master_dict, f)
-    print("done :-)")
+
+    print("[INFO]: done :-)")
 
 
 if __name__ == "__main__":
