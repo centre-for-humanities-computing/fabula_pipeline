@@ -63,22 +63,6 @@ def main():
     nltk.download("punkt")
 
     nlp = get_nlp(args.lang)
-    # if args.lang == "english":
-    #     try:
-    #         nlp = spacy.load("en_core_web_sm")
-    #     except OSError as e:
-    #         raise OSError(
-    #             "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
-    #         ) from e
-
-    # elif args.lang == "danish":
-    #     try:
-    #         nlp = spacy.load("da_core_news_sm")
-
-    #     except OSError as e:
-    #         raise OSError(
-    #             "da_core_news_sm not downloaded, run python3 -m spacy download da_core_news_sm"
-    #         ) from e
 
     nlp.max_length = 3500000
 
