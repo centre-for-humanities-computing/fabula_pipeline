@@ -85,6 +85,7 @@ def main():
         )
 
     print("starting loop")
+
     for filename in Path(in_dir).glob("*.txt"):
         temp = {}
 
@@ -113,7 +114,7 @@ def main():
         if len(sents) < 1502:
             print(f"\n{filename.name}")
             print("text not long enough for stylometrics\n")
-            pass
+
         else:
             temp["average_sentlen"] = avg_sentlen(sents)
             temp["gzipr"], temp["bzipr"] = compressrat(sents)
@@ -126,7 +127,6 @@ def main():
         except:
             print(f"\n{filename.name}")
             print("error in bigram and/or word entropy\n")
-            pass
 
         # setting up sentiment analyzer
         if "vader" in args.sentiment_method:
@@ -138,7 +138,7 @@ def main():
         if len(arc) < 60:
             print(f"\n{filename.name}")
             print("arc not long enough for basic sentiment features\n")
-            pass
+
         else:
             (
                 temp["mean_sentiment"],
@@ -157,7 +157,6 @@ def main():
         except:
             print(f"\n{filename.name}")
             print("error with approximate entropy\n")
-            pass
 
         # hurst
         try:
@@ -165,7 +164,6 @@ def main():
         except:
             print(f"\n{filename.name}")
             print("error with hurst\n")
-            pass
 
         # doing the things that only work in English
         if args.lang == "english":
@@ -182,7 +180,6 @@ def main():
             except:
                 print(f"\n{filename.name}")
                 print("error in readability\n")
-                pass
 
             # roget
             all_roget_categories = roget.list_all_categories()
