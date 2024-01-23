@@ -11,6 +11,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import numpy as np
 import pandas as pd
 import rpy2.robjects.packages as rpackages
+import spacy
 import textstat
 
 import saffine.multi_detrending as md
@@ -29,6 +30,27 @@ def check_args(args):
         return f"you cannot do {args.sentiment_method} in {args.lang}"
     else:
         return None
+
+
+def get_nlp(lang: str):
+    if lang == "english":
+        try:
+            nlp = spacy.load("en_core_web_sm")
+        except OSError as e:
+            raise OSError(
+                "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
+            ) from e
+
+    elif lang == "danish":
+        try:
+            nlp = spacy.load("da_core_news_sm")
+
+        except OSError as e:
+            raise OSError(
+                "da_core_news_sm not downloaded, run python3 -m spacy download da_core_news_sm"
+            ) from e
+
+    return nlp
 
 
 def extract_text(filename: str) -> str:

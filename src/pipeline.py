@@ -4,6 +4,8 @@
 TO DO:
 [ ] setup try/except for roget
 [ ] fix pandas SettingWithCopyWarning
+[ ] implement tqdm
+[ ] implment argument for spacy model
 [ ] the roget categories don't seem right or ?? 
 
 """
@@ -16,6 +18,7 @@ import neurokit2 as nk
 from nltk.tokenize import sent_tokenize
 import nltk
 import spacy
+from tqdm import tqdm
 
 from utils import *
 
@@ -50,7 +53,7 @@ def main():
     in_dir = Path(args.in_dir)
     out_dir = Path(args.out_dir)
 
-    print("[INFO]: checking arguments and downloading nltk data")
+    print("[INFO]: checking arguments and loading nltk and spacy data")
 
     incompatible_args = check_args(args)
 
@@ -59,28 +62,29 @@ def main():
 
     nltk.download("punkt")
 
-    if args.lang == "english":
-        try:
-            nlp = spacy.load("en_core_web_sm")
-        except OSError as e:
-            raise OSError(
-                "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
-            ) from e
+    nlp = get_nlp(args.lang)
+    # if args.lang == "english":
+    #     try:
+    #         nlp = spacy.load("en_core_web_sm")
+    #     except OSError as e:
+    #         raise OSError(
+    #             "en_core_web_sm not downloaded, run python3 -m spacy download en_core_web_sm"
+    #         ) from e
 
-    elif args.lang == "danish":
-        try:
-            nlp = spacy.load("da_core_news_sm")
+    # elif args.lang == "danish":
+    #     try:
+    #         nlp = spacy.load("da_core_news_sm")
 
-        except OSError as e:
-            raise OSError(
-                "da_core_news_sm not downloaded, run python3 -m spacy download da_core_news_sm"
-            ) from e
+    #     except OSError as e:
+    #         raise OSError(
+    #             "da_core_news_sm not downloaded, run python3 -m spacy download da_core_news_sm"
+    #         ) from e
 
     nlp.max_length = 3500000
 
     master_dict = {}
 
-    print("[INFO]: checking folder")
+    print("[INFO]: checking in_dir")
 
     # checking that there are actually files in that folder
     if list(Path(in_dir).glob("*.txt")) == []:
