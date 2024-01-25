@@ -8,7 +8,6 @@ from pathlib import Path
 from afinn import Afinn
 from nltk.tokenize import word_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from nltk.stem.wordnet import WordNetLemmatizer
 
 
 import numpy as np
@@ -363,21 +362,14 @@ def get_token_categories(df: pd.DataFrame) -> str:
     return token_categories
 
 
-def sent_concreteness(sents: list, diconc: dict) -> list:
-    """
-    get the concreteness for each word in each sentence
-    """
-    lmtzr = WordNetLemmatizer()
+def make_dico(lexicon: list) -> dict:
+    tabs = [line.split("\t") for line in lexicon]
 
-    conreteness_per_sentence = []
+    words = [word[0] for word in tabs if len(tabs) > 1]
+    counts = [word[1:] for word in tabs if len(tabs) > 1]
 
-    for sent in sents:
-        words = word_tokenize(sent)
-        lemmas = [lmtzr.lemmatize(word) for word in words]
+    dico = {}
+    for i, word in enumerate(words):
+        dico[word] = counts[i]
 
-        concretenesscore_per_word = [
-            diconc[lem] for lem in lemmas if lem in diconc.keys()
-        ]
-        conreteness_per_sentence.append(concretenesscore_per_word)
-
-    return conreteness_per_sentence
+    return dico

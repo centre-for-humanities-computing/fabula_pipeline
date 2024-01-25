@@ -16,6 +16,8 @@ from pathlib import Path
 from lexical_diversity import lex_div as ld
 import neurokit2 as nk
 from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.stem.wordnet import WordNetLemmatizer
+
 
 import nltk
 from tqdm import tqdm
@@ -60,6 +62,7 @@ def main():
 
     nltk.download("punkt")
     nltk.download("wordnet")
+    lmtzr = WordNetLemmatizer()
 
     nlp = get_nlp(args.lang)
     nlp.max_length = 3500000
@@ -169,10 +172,33 @@ def main():
                 print(f"\n{filename.name}")
                 print("error in readability\n")
 
-            # concreteness
+            # concreteness and VAD
             diconc = json.load("concreteness_dict.json")
 
-            temp["concreteness"] = sent_concreteness(sents, diconc)
+            with open("NRC-VAD-Lexicon.txt", "r") as f:
+                lexicon = f.readlines()
+
+            dico = make_dico(lexicon)
+
+            conc = []
+            val, aro, dom = [], [], []
+
+            for sent in sents:
+                words = word_tokenize(sent)
+                lemmas = [lmtzr.lemmatize(word) for word in words]
+
+                for lem in lemmas:
+                    if lem in diconc.keys():
+                        conc.append([diconc[lem]])
+                    if lem in dico.keys():
+                        val.append([dico[lem][0]])
+                        aro.append([dico[lem][1]])
+                        dom.append([dico[lem][2]])
+
+            temp["concreteness"] = conc
+            temp["valence"] = val
+            temp["arousal"] = aro
+            temp["dominance"] = dom
 
             # roget
             all_roget_categories = roget.list_all_categories()
