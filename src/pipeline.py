@@ -15,9 +15,9 @@ from pathlib import Path
 
 from lexical_diversity import lex_div as ld
 import neurokit2 as nk
-from nltk.tokenize import sent_tokenize
+from nltk.tokenize import sent_tokenize, word_tokenize
+
 import nltk
-import spacy
 from tqdm import tqdm
 
 from utils import *
@@ -54,22 +54,17 @@ def main():
     out_dir = Path(args.out_dir)
 
     print("[INFO]: checking arguments and loading nltk and spacy data")
-
     incompatible_args = check_args(args)
-
     if incompatible_args != None:
         raise ValueError(f"{incompatible_args}")
 
     nltk.download("punkt")
+    nltk.download("wordnet")
 
     nlp = get_nlp(args.lang)
-
     nlp.max_length = 3500000
 
-    master_dict = {}
-
     print("[INFO]: checking in_dir")
-
     # checking that there are actually files in that folder
     if list(Path(in_dir).glob("*.txt")) == []:
         raise ValueError(
@@ -77,6 +72,7 @@ def main():
         )
 
     print("[INFO]: starting loop")
+    master_dict = {}
 
     for filename in Path(in_dir).glob("*.txt"):
         temp = {}
@@ -172,6 +168,11 @@ def main():
             except:
                 print(f"\n{filename.name}")
                 print("error in readability\n")
+
+            # concreteness
+            diconc = json.load("concreteness_dict.json")
+
+            temp["concreteness"] = sent_concreteness(sents, diconc)
 
             # roget
             all_roget_categories = roget.list_all_categories()
