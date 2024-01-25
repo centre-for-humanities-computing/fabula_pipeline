@@ -8,6 +8,9 @@ from pathlib import Path
 from afinn import Afinn
 from nltk.tokenize import word_tokenize
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
+from nltk.stem.wordnet import WordNetLemmatizer
+
+
 import numpy as np
 import pandas as pd
 import rpy2.robjects.packages as rpackages
@@ -33,6 +36,9 @@ def check_args(args):
 
 
 def get_nlp(lang: str):
+    """
+    checks if the spacy model is loaded, errors if not
+    """
     if lang == "english":
         try:
             nlp = spacy.load("en_core_web_sm")
@@ -355,3 +361,23 @@ def get_token_categories(df: pd.DataFrame) -> str:
     ).to_string()
 
     return token_categories
+
+
+def sent_concreteness(sents: list, diconc: dict) -> list:
+    """
+    get the concreteness for each word in each sentence
+    """
+    lmtzr = WordNetLemmatizer()
+
+    conreteness_per_sentence = []
+
+    for sent in sents:
+        words = word_tokenize(sent)
+        lemmas = [lmtzr.lemmatize(word) for word in words]
+
+        concretenesscore_per_word = [
+            diconc[lem] for lem in lemmas if lem in diconc.keys()
+        ]
+        conreteness_per_sentence.append(concretenesscore_per_word)
+
+    return conreteness_per_sentence
